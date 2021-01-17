@@ -214,6 +214,7 @@ def divide_function(data, left, right, k):
     """
     if left < right and k < right - left:
         pos = divide_position(data, left, right)
+        # 当发现当前的数据已经小于k的时候，已经没有办法分治，此时数据量接近k，直接排序截取即可
         if k >= (right - pos):
             cut_data = data[left:]
             return sort_cut_top_k(cut_data, k)
@@ -221,12 +222,13 @@ def divide_function(data, left, right, k):
 
 
 def divide_position(data, left, right):
-    index = data[right]
-    i = left - 1
+    index = data[right]  # 取最后一个当做主元
+    i = left - 1  # 第一个数据项，由于left加进来之后+1了，这里-1
     for j in range(left, right):
-        if index > data[j]:
+        if index > data[j]:  # 如果比主元小，那么放到左边
             i += 1
             data[i], data[j] = data[j], data[i]
+    # 最后调换主元与第i+1个的数据，此时的第i+1个数据肯定比主元大，放在最后面也就没啥问题了
     data[i + 1], data[right] = data[right], data[i + 1]
     return i + 1
 ```
