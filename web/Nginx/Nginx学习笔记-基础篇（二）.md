@@ -193,26 +193,70 @@ location /lca {
 
 #### 3.2.1 连接限制
 （1）连接限制1
-- Syntax：limit_conn_zone key zone=name:size;   # 用哪个空间作为key，zone的空间的名字，size即申请空间的大小
+- Syntax：limit_conn_zone key zone=name:size;   
+	- 用哪个空间作为key，zone的空间的名字
+	- size即申请空间的大小
 - Default： --
 - Content：http
 
 
 （2）连接限制2
-- Syntax：limit_conn zone number;  # 结合先定义好的zone，与上面的zone=name是一个名字
+- Syntax：limit_conn zone number;  
+	- 结合先定义好的zone，与上面的zone=name是一个名字
 - Default： --
 - Content：http，server， location 
 
 
-#### 3.2.1 请求限制
-（1）连接限制1
-- Syntax：limit_req_zone key zone=name:size rate=rate;   # 用哪个空间作为key，zone的空间的名字，size即申请空间的大小，rate速率
+#### 3.2.2 请求限制
+（1）请求限制1
+- Syntax：limit_req_zone key zone=name:size rate=rate;   
+	-  用哪个空间作为key，zone的空间的名字
+	-  size即申请空间的大小
+	-  rate速率（1r/s）
 - Default： --
 - Content：http
 
 
-（2）连接限制2
-- Syntax：limit_req zone number [burst=number\] [nodelay];  # 结合先定义好的zone，与上面的zone=name是一个名字
-- 合先定义好的zone，与上面的zone=name是一个名字
+（2）请求限制2
+- Syntax：limit_req zone number [burst=number\] [nodelay];  
+	-  结合先定义好的zone，与上面的zone=name是一个名字；
+	-  burst字段中的number是，在上面请求限制rate速率的速度下，遗留number放到下一秒进行，起到访问限速的作用（延迟响应）
+	-  其他剩余的部分就会nodelay，当然如果不配置nodelay，就不会进行。
+	- 合先定义好的zone，与上面的zone=name是一个名字
 - Default： --
 - Content：http，server， location 
+
+#### 3.2.3 对请求数据进行限制测试
+使用==ab==工具进行压力测试，进行请求压测：
+```linux
+ab -n 50 -c 20 http://192.168.199.98/1.html
+```
+
+### 3.3 访问控制
+Nginx的访问控制主要两种
+1. 基于IP的访问控制：http_access_module
+2. 基于用户的登录认证的访问控制：http_auth_basic_moduled
+
+#### 3.3.1 基于IP的访问控制
+参数：==http_access_module==
+
+（1）允许操作
+- Syntax：allow address|CIDR|unix:|all;
+	- 【address】： IP地址进行控制
+	- 【CIDR】：基于网段进行控制
+	- 【unix:】：基于socket的配置
+	- 【all】：允许所有的
+- Default： --
+- Content：http，server， location 
+
+
+（2）禁止操作
+- Syntax：deny address|CIDR|unix:|all;
+	- 【address】： IP地址进行控制
+	- 【CIDR】：基于网段进行控制
+	- 【unix:】：基于socket的配置
+	- 【all】：允许所有的
+- Default： --
+- Content：http，server， location ，limit_except
+
+#### 3.3.1 基于用户的登录认证的访问控制
