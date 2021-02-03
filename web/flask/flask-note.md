@@ -421,3 +421,4 @@ flask db upgrade
 sudo unzip -d ./dist dist.zip       # 根据压缩包格式决定使用命令
 sudo chown -R root:root dist        # 根据nginx中的配置确定
 ```
+我们一般把静态
