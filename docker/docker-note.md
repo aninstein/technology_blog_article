@@ -42,10 +42,45 @@ Docker 主机(Host)|一个物理或者虚拟的机器用于执行 Docker 守护�
 Docker Registry|Docker 仓库用来保存镜像，可以理解为代码控制中的代码仓库。
 Docker Hub(https://hub.docker.com) 提供了庞大的镜像集合供使用。|一个 Docker Registry 中可以包含多个仓库（Repository）；每个仓库可以包含多个标签（Tag）；每个标签对应一个镜像。通常，一个仓库会包含同一个软件不同版本的镜像，而标签就常用于对应该软件的各个版本。我们可以通过 <仓库名>:<标签> 的格式来指定具体是这个软件哪个版本的镜像。如果不给出标签，将以 latest 作为默认标签。
 Docker Machine|Docker Machine是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker，比如VirtualBox、 Digital Ocean、Microsoft Azure。
+Docker Compose |Compose 是用于定义和运行多容器 Docker 应用程序的工具。通过 Compose，您可以使用 YML 文件来配置应用程序需要的所有服务。然后，使用一个命令，就可以从 YML 文件配置中创建并启动所有服务。
+Swarm 集群管理|Docker Swarm 是 Docker 的集群管理工具。它将 Docker 主机池转变为单个虚拟 Docker 主机。 Docker Swarm 提供了标准的 Docker API，所有任何已经与 Docker 守护程序通信的工具都可以使用 Swarm 轻松地扩展到多个主机。
+Kubernetes|Kubernetes是Google开源的一个容器编排引擎，它支持自动化部署、大规模可伸缩、应用容器化管理。在生产环境中部署一个应用程序时，通常要部署该应用的多个实例以便对应用请求进行负载均衡。在Kubernetes中，我们可以创建多个容器，每个容器里面运行一个应用实例，然后通过内置的负载均衡策略，实现对这一组应用实例的管理、发现、访问，而这些细节都不需要运维人员去进行复杂的手工配置和处理。
 
 ## Docker使用
 ### 1. hello world
+我们使用Nginx的镜像来进行测试。由于我们之前已经把源换成了nginx，因此速度会快一些
+```shell
+# 查看docker源仓库中是否有nginx
+docker search nginx
 
 
-## Docker进阶
+# 从仓库拉取nginx
+docker pull nginx:latest
+
+# 查看本地镜像就能够得到docker配置
+docker images
+
+# 运行容器，docker run是创建一个容器的命令，可以使用man docker run查看命令详解和参数
+docker run --name nginx-test -p 8080:80 -d nginx
+
+# 想要进入了docker的bash
+docker exec -itd nginx /bin/bash
+
+```
+docker run常用参数：
+-  --name nginx-test：容器名称。
+- -p 8080:80： 端口进行映射，将本地 8080 端口映射到容器内部的 80 端口。
+- -d nginx： 设置容器在在后台一直运行。
+-  -v $PWD(本地目录):/python(容器目录) python /bin/bash ： 挂载本地路径到容器上
+-  --rm bba-208 容器退出时就能够自动清理容器内部的文件系统
+
+此时就能够通过访问，就能够访问nginx的首页了，即hello world
+```
+http://192.168.x.x:8080
+```
+
+
+## Dockerfile
+
+
 ## Docker部署
