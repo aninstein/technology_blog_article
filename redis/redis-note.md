@@ -244,8 +244,98 @@ OK
 7) "docker"
 ```
 
+## 3. redis常用命令
+### 3.1 键操作
+- [dump key](http://redisdoc.com/internal/dump.html)：序列化key的操作，如果存在key则返回序列化后的值，如果不存在则返回空
+```
+127.0.0.1:6379> set lichangan "redis"
+OK
+127.0.0.1:6379> dump lichangan
+"\x00\x05redis\t\x00\x15\xa2\xf8=\xb6\xa9\xde\x90"
+127.0.0.1:6379> dump nokey
+(nil)
+127.0.0.1:6379>
+```
 
-## 3. redis的发布订阅模式和频道
-## 4. redis数据备份
-## 5. redis解决的分布式问题
-## 6. redis集群
+- [EXPIRE key seconds](https://www.runoob.com/redis/keys-expire.html)：Redis Expire 命令用于设置 key 的过期时间，key 过期后将不再可用。单位以秒计。
+- [PEXPIRE key milliseconds](https://www.runoob.com/redis/keys-pexpire.html)：设置 key 的过期时间以毫秒计。
+```
+127.0.0.1:6379> EXPIRE lichangan 10
+(integer) 1
+127.0.0.1:6379> exists lichangan
+(integer) 1
+127.0.0.1:6379> exists lichangan  # 10秒后
+(integer) 0
+127.0.0.1:6379>
+
+```
+
+- [EXPIREAT key timestamp](https://www.runoob.com/redis/keys-expireat.html)：Redis Expireat 命令用于以 UNIX 时间戳(unix timestamp)格式设置 key 的过期时间。key 过期后将不再可用。 
+- [PEXPIREAT key milliseconds-timestamp](https://www.runoob.com/redis/keys-pexpireat.html)：设置 key 过期时间的时间戳(unix timestamp) 以毫秒计
+```
+127.0.0.1:6379> set lichangan redis
+OK
+127.0.0.1:6379> EXPIREAT lichangan 1615223284
+(integer) 1
+127.0.0.1:6379> exists lichangan
+(integer) 0
+127.0.0.1:6379>
+
+```
+
+
+- [TTL key](https://www.runoob.com/redis/keys-ttl.html)：以秒为单位，返回给定 key 的剩余生存时间(TTL, time to live)。当 key 不存在时，返回 -2 。 当 key 存在但没有设置剩余生存时间时，返回 -1 。 否则，以秒为单位，返回 key 的剩余生存时间。
+- [PTTL key](https://www.runoob.com/redis/keys-pttl.html)：以毫秒为单位返回 key 的剩余的过期时间。当 key 不存在时，返回 -2 。 当 key 存在但没有设置剩余生存时间时，返回 -1 。 否则，以毫秒为单位，返回 key 的剩余生存时间。
+- [PERSIST key](https://www.runoob.com/redis/keys-persist.html)：移除 key 的过期时间，key 将持久保持。
+```
+127.0.0.1:6379> pexpire lichangan 100000
+(integer) 1
+127.0.0.1:6379> pttl lichangan
+(integer) 92740
+127.0.0.1:6379> ttl lichangan
+(integer) 86
+127.0.0.1:6379> persist lichangan
+(integer) 1
+127.0.0.1:6379> ttl lichangan
+(integer) -1
+127.0.0.1:6379>
+```
+
+
+- [MOVE key db](https://www.runoob.com/redis/keys-move.html)：将当前数据库的 key 移动到给定的数据库 db 当中。移动成功返回 1 ，失败则返回 0 。 
+```
+127.0.0.1:6379> set lichangan redis
+OK
+127.0.0.1:6379> move lichangan 1
+(integer) 1
+127.0.0.1:6379> exists lichangan
+(integer) 0
+127.0.0.1:6379> select 1
+OK
+127.0.0.1:6379[1]> exists lichangan
+(integer) 1
+127.0.0.1:6379[1]>
+```
+
+
+13	RANDOMKEY
+从当前数据库中随机返回一个 key 。
+14	RENAME key newkey
+修改 key 的名称
+15	RENAMENX key newkey
+仅当 newkey 不存在时，将 key 改名为 newkey 。
+16	SCAN cursor [MATCH pattern] [COUNT count]
+迭代数据库中的数据库键。
+17	TYPE key
+返回 key 所储存的值的类型。
+ 
+
+## 4. redis的发布订阅模式和频道
+## 5. redis数据备份与迁移
+## 6. redis解决的分布式问题
+## 7. redis集群
+
+
+## 摘录自：
+redis官方文档：http://redisdoc.com/topic/index.html
+菜鸟教程：https://www.runoob.com/redis/redis-keys.html
