@@ -256,6 +256,13 @@ OK
 (nil)
 127.0.0.1:6379>
 ```
+[序列化的作用：https://www.gxlcms.com/redis-366739.html](https://www.gxlcms.com/redis-366739.html)
+大概是：
+序列化最终的目的是为了对象可以跨平台存储，和进行网络传输。而我们进行跨平台存储和网络传输的方式就是IO，而我们的IO支持的数据格式就是字节数组。 （推荐学习：Redis视频教程）
+
+通过上面我想你已经知道了凡是需要进行“跨平台存储”和”网络传输”的数据，都需要进行序列化。
+
+本质上存储和网络传输 都需要经过 把一个对象状态保存成一种跨平台识别的字节格式，然后其他的平台才可以通过字节信息解析还原对象信息。
 
 - [EXPIRE key seconds](https://www.runoob.com/redis/keys-expire.html)：Redis Expire 命令用于设置 key 的过期时间，key 过期后将不再可用。单位以秒计。
 - [PEXPIRE key milliseconds](https://www.runoob.com/redis/keys-pexpire.html)：设置 key 的过期时间以毫秒计。
@@ -317,20 +324,151 @@ OK
 127.0.0.1:6379[1]>
 ```
 
-
-13	RANDOMKEY
-从当前数据库中随机返回一个 key 。
-14	RENAME key newkey
-修改 key 的名称
-15	RENAMENX key newkey
-仅当 newkey 不存在时，将 key 改名为 newkey 。
-16	SCAN cursor [MATCH pattern] [COUNT count]
-迭代数据库中的数据库键。
-17	TYPE key
+- [TYPE key](https://www.runoob.com/redis/keys-type.html)
 返回 key 所储存的值的类型。
- 
+```
+127.0.0.1:6379> set lichangan redis
+OK
+127.0.0.1:6379> type lichangan
+string
+127.0.0.1:6379>
+```
+
+### 3.2 字符串操作
+- SET key value
+设置指定 key 的值
+- GET key
+获取指定 key 的值。
+- GETRANGE key start end
+返回 key 中字符串值的子字符
+- GETSET key value
+将给定 key 的值设为 value ，并返回 key 的旧值(old value)。
+- GETBIT key offset
+对 key 所储存的字符串值，获取指定偏移量上的位(bit)。
+- MGET key1 [key2..]
+获取所有(一个或多个)给定 key 的值。
+- SETBIT key offset value
+对 key 所储存的字符串值，设置或清除指定偏移量上的位(bit)。
+
+- SETEX key seconds value
+将值 value 关联到 key ，并将 key 的过期时间设为 seconds (以秒为单位)。
+- SETNX key value
+只有在 key 不存在时设置 key 的值。
+```
+redis 127.0.0.1:6379> SETEX mykey 60 redis
+OK
+redis 127.0.0.1:6379> TTL mykey
+60
+redis 127.0.0.1:6379> GET mykey
+"redis
+redis> EXISTS job                # job 不存在
+(integer) 0
+redis> SETNX job "programmer"    # job 设置成功
+(integer) 1
+redis> SETNX job "code-farmer"   # 尝试覆盖 job ，失败
+(integer) 0
+redis> GET job                   # 没有被覆盖
+"programmer"
+```
+当我们使用redis处理分布式锁的问题的时候，一般会把setex和setnx连用，[解决分布式锁问题介绍](https://www.cnblogs.com/jiawen010/articles/11350125.html)
+即通过setnx获取锁，如果能够获取到，则使用setex设置解锁时间。如果获取不到，则结束。
+
+
+- SETRANGE key offset value
+用 value 参数覆写给定 key 所储存的字符串值，从偏移量 offset 开始。
+- STRLEN key
+返回 key 所储存的字符串值的长度。
+- MSET key value [key value ...]
+同时设置一个或多个 key-value 对。
+- MSETNX key value [key value ...]
+同时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在。
+- PSETEX key milliseconds value
+这个命令和 SETEX 命令相似，但它以毫秒为单位设置 key 的生存时间，而不是像 SETEX 命令那样，以秒为单位。
+- INCR key
+将 key 中储存的数字值增一。
+- INCRBY key increment
+将 key 所储存的值加上给定的增量值（increment） 。
+- INCRBYFLOAT key increment
+将 key 所储存的值加上给定的浮点增量值（increment） 。
+- DECR key
+将 key 中储存的数字值减一。
+- DECRBY key decrement
+key 所储存的值减去给定的减量值（decrement） 。
+- APPEND key value
+如果 key 已经存在并且是一个字符串， APPEND 命令将指定的 value 追加到该 key 原来值（value）的末尾。 
+
+### 3.3 哈希表操作
+- HDEL key field1 [field2]
+删除一个或多个哈希表字段
+- HEXISTS key field
+查看哈希表 key 中，指定的字段是否存在。
+- HGET key field
+获取存储在哈希表中指定字段的值。
+- HGETALL key
+获取在哈希表中指定 key 的所有字段和值
+- HINCRBY key field increment
+为哈希表 key 中的指定字段的整数值加上增量 increment 。
+- HINCRBYFLOAT key field increment
+为哈希表 key 中的指定字段的浮点数值加上增量 increment 。
+- HKEYS key
+获取所有哈希表中的字段
+- HLEN key
+获取哈希表中字段的数量
+- HMGET key field1 [field2]
+获取所有给定字段的值
+- HMSET key field1 value1 [field2 value2 ]
+同时将多个 field-value (域-值)对设置到哈希表 key 中。
+- HSET key field value
+将哈希表 key 中的字段 field 的值设为 value 。
+- HSETNX key field value
+只有在字段 field 不存在时，设置哈希表字段的值。
+- HVALS key
+获取哈希表中所有值。
+- HSCAN key cursor [MATCH pattern] [COUNT count]
+迭代哈希表中的键值对。
+
+### 3.4 列表操作（list）
+### 3.5 集合操作（set）
+### 3.6 有序集合操作（zset）
+### 3.7 hyperLogLog
+Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定的、并且是很小的。
+
+在 Redis 里面，每个 HyperLogLog 键只需要花费 12 KB 内存，就可以计算接近 2^64 个不同元素的基数。这和计算基数时，元素越多耗费内存就越多的集合形成鲜明对比。
+
+但是，因为 HyperLogLog 只会根据输入元素来计算基数，而不会储存输入元素本身，所以 HyperLogLog 不能像集合那样，返回输入的各个元素。
+
+- 什么是基数?
+比如数据集 {1, 3, 5, 7, 5, 7, 8}， 那么这个数据集的基数集为 {1, 3, 5 ,7, 8}, 基数(不重复元素)为5。 基数估计就是在误差可接受的范围内，快速计算基数。 
+
+- 常用命令：
+1.	PFADD key element [element ...]
+添加指定元素到 HyperLogLog 中。
+2.	PFCOUNT key [key ...]
+返回给定 HyperLogLog 的基数估算值。
+3.	PFMERGE destkey sourcekey [sourcekey ...]
+将多个 HyperLogLog 合并为一个 HyperLogLog 
+
 
 ## 4. redis的发布订阅模式和频道
+### 4.1 如何开启redis的发布订阅模式？
+首先需要熟悉，什么是redis键空间通知。
+我们可以在redis执行，开启键空间通知。
+```
+config set notify-keyspace-events Ex
+```
+
+   Redis的键空间通知(keyspace notifications)功能是自2.8.0版本开始加入的，客户端可以通过订阅/发布(Pub/Sub)机制，接收那些以某种方式改变了Redis数据空间的事件通知。比如：所有改变给定key的命令；所有经过lpush操作的key；所有在0号数据库中过期的key等等。
+
+         通知是通过Redis的订阅/发布机制发送的，因此，所有支持订阅/发布功能的客户端都可在无需调整的情况下，使用键空间通知功能。
+
+ 
+
+         Redis的发布/订阅目前是即发即弃(fire and forget)模式的，因此无法实现事件的可靠通知。也就是说，如果发布/订阅的客户端断链之后又重连，则在客户端断链期间的所有事件都丢失了。
+
+
+### 4.2 什么是频道？
+
+
 ## 5. redis数据备份与迁移
 ## 6. redis解决的分布式问题
 ## 7. redis集群
