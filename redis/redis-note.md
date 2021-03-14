@@ -450,7 +450,8 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 
 
 ## 4. redis的发布订阅模式和频道
-### 4.1 如何开启redis的发布订阅模式？
+### 4.1 redis的订阅模式
+#### 4.1.1 键空间通知
 首先需要熟悉，什么是redis键空间通知。
 我们可以在redis执行，开启键空间通知。
 ```
@@ -459,15 +460,44 @@ config set notify-keyspace-events Ex
 
    Redis的键空间通知(keyspace notifications)功能是自2.8.0版本开始加入的，客户端可以通过订阅/发布(Pub/Sub)机制，接收那些以某种方式改变了Redis数据空间的事件通知。比如：所有改变给定key的命令；所有经过lpush操作的key；所有在0号数据库中过期的key等等。
 
-         通知是通过Redis的订阅/发布机制发送的，因此，所有支持订阅/发布功能的客户端都可在无需调整的情况下，使用键空间通知功能。
+通知是通过Redis的订阅/发布机制发送的，因此，所有支持订阅/发布功能的客户端都可在无需调整的情况下，使用键空间通知功能。
 
- 
+Redis的发布/订阅目前是即发即弃(fire and forget)模式的，因此无法实现事件的可靠通知。也就是说，如果发布/订阅的客户端断链之后又重连，则在客户端断链期间的所有事件都丢失了。
 
-         Redis的发布/订阅目前是即发即弃(fire and forget)模式的，因此无法实现事件的可靠通知。也就是说，如果发布/订阅的客户端断链之后又重连，则在客户端断链期间的所有事件都丢失了。
+#### 4.1.2 发布订阅模式介绍
+Redis 发布订阅 (pub/sub) 是一种消息通信模式：发送者 (pub) 发送消息，订阅者 (sub) 接收消息。
+Redis 客户端可以订阅任意数量的频道。
+
+下图展示了频道 channel1 ， 以及订阅这个频道的三个客户端 —— client2 、 client5 和 client1 之间的关系：
+![](https://www.runoob.com/wp-content/uploads/2014/11/pubsub1.png)
+当有新消息通过 PUBLISH 命令发送给频道 channel1 时， 这个消息就会被发送给订阅它的三个客户端：
+![](https://www.runoob.com/wp-content/uploads/2014/11/pubsub2.png)
 
 
-### 4.2 什么是频道？
+- Redis 发布订阅命令
 
+1.	PSUBSCRIBE pattern [pattern ...]
+订阅一个或多个符合给定模式的频道。
+2.	PUBSUB subcommand [argument [argument ...]]
+查看订阅与发布系统状态。
+3.	PUBLISH channel message
+将信息发送到指定的频道。
+4.	PUNSUBSCRIBE [pattern [pattern ...]]
+退订所有给定模式的频道。
+5.	SUBSCRIBE channel [channel ...]
+订阅给定的一个或多个频道的信息。
+6.	UNSUBSCRIBE [channel [channel ...]]
+指退订给定的频道。
+
+
+### 4.2 redis的频道与redis实现的消息队列
+摘自：https://www.jianshu.com/p/d32b16f12f09
+我们知道常用的消息队列有kafka，rabbitmq等。但是使用redis也能够实现消息队列。
+redis实现消息队列的方式主要有：
+1. 基于List的 LPUSH+BRPOP和键空间通知 的实现
+2. PUB/SUB，订阅/发布模式
+3. 基于Sorted-Set的实现
+4. 基于Stream类型的实现
 
 ## 5. redis数据备份与迁移
 ## 6. redis解决的分布式问题

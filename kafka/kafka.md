@@ -73,3 +73,26 @@ zk分为server和client，它们的作用是：
 其中zookeeper提供的master选举选的是客户端的master，根据他们登录后在GroupMember目录下创建的临时目录的id来选的，最小的是master。  
 
 这就区别于集群中服务端的各个servers的角色了，servers角色是leader和follow（或者还有observer）。 简而言之，客户端通过服务端来获取到zookeeper提供的服务。
+
+
+## 2. 安装kafka
+下载软件包：
+```
+wget https://www.apache.org/dyn/closer.cgi?path=/kafka/2.7.0/kafka_2.13-2.7.0.tgz
+```
+解压即可，kafka依赖zookeeper进行管理。而在下载的kafka执行文件当中已经包括了zookeeper，并不需要单独安装zookeeper。
+
+先启动zookeeper服务器：
+```
+bin/zookeeper-server-start.sh config/zookeeper.properties
+```
+
+然后启动kafka：
+```
+bin/kafka-server-start.sh config/server.properties
+```
+
+使用ps查看服务已经起来了：
+```
+
+```
