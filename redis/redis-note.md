@@ -654,6 +654,20 @@ Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是�
 3.	PFMERGE destkey sourcekey [sourcekey ...]
 将多个 HyperLogLog 合并为一个 HyperLogLog 
 
+### 3.8 Redis GEO
+
+Redis GEO 主要用于存储地理位置信息，并对存储的信息进行操作，该功能在 Redis 3.2 版本新增。
+
+Redis GEO 操作方法有：
+
+- geoadd：添加地理位置的坐标。
+- geopos：获取地理位置的坐标。
+- geodist：计算两个位置之间的距离。
+- georadius：根据用户给定的经纬度坐标来获取指定范围内的地理位置集合。
+- georadiusbymember：根据储存在位置集合里面的某个地点获取指定范围内的地理位置集合。
+- geohash：返回一个或多个位置对象的 geohash 值。
+
+
 
 ## 4. redis的发布订阅模式和频道
 ### 4.1 redis的订阅模式
