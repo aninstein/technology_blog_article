@@ -428,8 +428,214 @@ key 所储存的值减去给定的减量值（decrement） 。
 迭代哈希表中的键值对。
 
 ### 3.4 列表操作（list）
+1. BLPOP key1 [key2 ] timeout
+移出并获取列表的第一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。
+如果列表为空，返回一个 nil 。 否则，返回一个含有两个元素的列表，第一个元素是被弹出元素所属的 key ，第二个元素是被弹出元素的值。
+
+2.	BRPOP key1 [key2 ] timeout
+移出并获取列表的最后一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。
+假如在指定时间内没有任何元素被弹出，则返回一个 nil 和等待时长。 反之，返回一个含有两个元素的列表，第一个元素是被弹出元素所属的 key ，第二个元素是被弹出元素的值。 
+
+3.	BRPOPLPUSH source destination timeout
+从列表中弹出一个值，将弹出的元素插入到另外一个列表中并返回它； 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。
+假如在指定时间内没有任何元素被弹出，则返回一个 nil 和等待时长。 反之，返回一个含有两个元素的列表，第一个元素是被弹出元素的值，第二个元素是等待时长。 
+
+
+4.	LINDEX key index
+通过索引获取列表中的元素，你也可以使用负数下标，以 -1 表示列表的最后一个元素， -2 表示列表的倒数第二个元素，以此类推。 
+
+6.	5.	LINSERT key BEFORE|AFTER pivot value
+在列表的元素前或者后插入元素，列表的元素前或者后插入元素。当指定元素不存在于列表中时，不执行任何操作。
+当列表不存在时，被视为空列表，不执行任何操作。
+如果 key 不是列表类型，返回一个错误。 
+
+
+6.	LLEN key
+获取列表长度，返回列表的长度。 如果列表 key 不存在，则 key 被解释为一个空列表，返回 0 。 如果 key 不是列表类型，返回一个错误。 
+
+
+7.	LPOP key
+移出并获取列表的第一个元素，列表的第一个元素。 当列表 key 不存在时，返回 nil 
+
+
+8.	LPUSH key value1 [value2]
+将一个或多个值插入到列表头部，命令将一个或多个值插入到列表头部。 如果 key 不存在，一个空列表会被创建并执行 LPUSH 操作。 当 key 存在但不是列表类型时，返回一个错误。 
+
+9.	LPUSHX key value
+将一个值插入到已存在的列表头部，列表不存在时操作无效。 
+
+
+10.	LRANGE key start stop
+获取列表指定范围内的元素，区间以偏移量 START 和 END 指定。 其中 0 表示列表的第一个元素， 1 表示列表的第二个元素，以此类推。 你也可以使用负数下标，以 -1 表示列表的最后一个元素， -2 表示列表的倒数第二个元素，以此类推。 
+
+
+11	.LREM key count value
+移除列表元素。
+参数 COUNT 的值，移除列表中与参数 VALUE 相等的元素。
+
+COUNT 的值可以是以下几种：
+- count > 0 : 从表头开始向表尾搜索，移除与 VALUE 相等的元素，数量为 COUNT 。
+- count < 0 : 从表尾开始向表头搜索，移除与 VALUE 相等的元素，数量为 COUNT 的绝对值。
+- count = 0 : 移除表中所有与 VALUE 相等的值。
+
+
+12.	LSET key index value
+通过索引设置列表元素的值当索引参数超出范围，或对一个空列表进行 LSET 时，返回一个错误。
+
+13.	LTRIM key start stop
+对一个列表进行修剪(trim)，就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除。
+下标 0 表示列表的第一个元素，以 1 表示列表的第二个元素，以此类推。 你也可以使用负数下标，以 -1 表示列表的最后一个元素， -2 表示列表的倒数第二个元素，以此类推。
+
+14.	RPOP key
+移除列表的最后一个元素，返回值为移除的元素。当列表不存在时，返回 nil 。 
+
+
+15.	RPOPLPUSH source destination
+移除列表的最后一个元素，并将该元素添加到另一个列表并返回
+16.	RPUSH key value1 [value2]
+在列表中添加一个或多个值。如果列表不存在，一个空列表会被创建并执行 RPUSH 操作。 当列表存在但不是列表类型时，返回一个错误。
+注意：在 Redis 2.4 版本以前的 RPUSH 命令，都只接受单个 value 值。
+
+17.	RPUSHX key value
+命令用于将一个值插入到已存在的列表尾部(最右边)。如果列表不存在，操作无效。 
+
+
 ### 3.5 集合操作（set）
+1.	SADD key member1 [member2]
+向集合添加一个或多个成员
+2.	SCARD key
+获取集合的成员数
+3.	SDIFF key1 [key2]
+返回第一个集合与其他集合之间的差异。也可以认为说第一个集合中独有的元素。不存在的集合 key 将视为空集。
+差集的结果来自前面的 FIRST_KEY ,而不是后面的 OTHER_KEY1，也不是整个 FIRST_KEY OTHER_KEY1..OTHER_KEYN 的差集。
+
+4.	SDIFFSTORE destination key1 [key2]
+返回给定所有集合的差集并存储在 destination 中。如果指定的集合 key 已存在，则会被覆盖。
+
+
+5.	SINTER key1 [key2]
+返回给定所有集合的交集。 不存在的集合 key 被视为空集。 当给定集合当中有一个空集时，结果也为空集(根据集合运算定律)。 
+
+6.	SINTERSTORE destination key1 [key2]
+返回给定所有集合的交集并存储在 destination 中。如果指定的集合已经存在，则将其覆盖。
+
+7.	SISMEMBER key member
+判断 member 元素是否是集合 key 的成员。如果成员元素是集合的成员，返回 1 。 如果成员元素不是集合的成员，或 key 不存在，返回 0 。
+
+
+8.	SMEMBERS key
+返回集合中的所有成员，不存在的集合 key 被视为空集合。 
+
+9.	SMOVE source destination member
+将 member 元素从 source 集合移动到 destination 集合。
+- SMOVE 是原子性操作。
+- 如果 source 集合不存在或不包含指定的 member 元素，则 SMOVE 命令不执行任何操作，仅返回 0 。否则， member 元素从 source 集合中被移除，并添加到 destination 集合中去。
+- 当 destination 集合已经包含 member 元素时， SMOVE 命令只是简单地将 source 集合中的 member 元素删除。
+- 当 source 或 destination 不是集合类型时，返回一个错误。
+- 如果成员元素被成功移除，返回 1 。 如果成员元素不是 source 集合的成员，并且没有任何操作对 destination 集合执行，那么返回 0 
+
+10.	SPOP key
+移除集合中的指定 key 的一个或多个随机元素，移除后会返回移除的元素。
+该命令类似 Srandmember 命令，但 SPOP 将随机元素从集合中移除并返回，而 Srandmember 则仅仅返回随机元素，而不对集合进行任何改动。
+被移除的随机元素。 当集合不存在或是空集时，返回 nil 。 
+
+
+11. SRANDMEMBER key [count]
+返回集合中一个或多个随机数。
+
+从 Redis 2.6 版本开始， Srandmember 命令接受可选的 count 参数：
+- 如果 count 为正数，且小于集合基数，那么命令返回一个包含 count 个元素的数组，数组中的元素各不相同。如果 count 大于等于集合基数，那么返回整个集合。
+- 如果 count 为负数，那么命令返回一个数组，数组中的元素可能会重复出现多次，而数组的长度为 count 的绝对值。 
+
+该操作和 SPOP 相似，但 SPOP 将随机元素从集合中移除并返回，而 Srandmember 则仅仅返回随机元素，而不对集合进行任何改动。 
+返回值：只提供集合 key 参数时，返回一个元素；如果集合为空，返回 nil 。 如果提供了 count 参数，那么返回一个数组；如果集合为空，返回空数组。 
+
+
+12.	SREM key member1 [member2]
+移除集合中一个或多个成员。命令用于移除集合中的一个或多个成员元素，不存在的成员元素会被忽略。
+当 key 不是集合类型，返回一个错误。
+返回值：被成功移除的元素的数量，不包括被忽略的元素。 
+
+13.	SUNION key1 [key2]
+返回所有给定集合的并集，不存在的集合 key 被视为空集。 
+14.	SUNIONSTORE destination key1 [key2]
+所有给定集合的并集存储在 destination 集合中。如果 destination 已经存在，则将其覆盖。
+15.	SSCAN key cursor [MATCH pattern] [COUNT count]
+迭代集合中的元素。Sscan 继承自 Scan。 
+- SSCAN 命令用于迭代集合键中的元素。
+- HSCAN 命令用于迭代哈希键中的键值对。
+- ZSCAN 命令用于迭代有序集合中的元素（包括元素成员和元素分值）。
+对于：
+```
+SSCAN key cursor [MATCH pattern] [COUNT count]
+```
+- cursor - 游标。
+- pattern - 匹配的模式。
+- count - 指定从数据集里返回多少元素，默认值为 10 。
+
 ### 3.6 有序集合操作（zset）
+1.	ZADD key score1 member1 [score2 member2]
+向有序集合添加一个或多个成员，或者更新已存在成员的分数
+2.	ZCARD key
+获取有序集合的成员数
+3.	ZCOUNT key min max
+计算在有序集合中指定区间分数的成员数
+4.	ZINCRBY key increment member
+有序集合中对指定成员的分数加上增量 increment。
+可以通过传递一个负数值 increment ，让分数减去相应的值，比如 ZINCRBY key -5 member ，就是让 member 的 score 值减去 5 。
+当 key 不存在，或分数不是 key 的成员时， ZINCRBY key increment member 等同于 ZADD key increment member 。当 key 不是有序集类型时，返回一个错误。
+分数值可以是整数值或双精度浮点数。 
+
+5.	ZINTERSTORE destination numkeys key [key ...]
+计算给定的一个或多个有序集的交集并将结果集存储在新的有序集合 destination 中。给定的一个或多个有序集的交集，其中给定 key 的数量必须以 numkeys 参数指定，并将该交集(结果集)储存到 destination 。
+默认情况下，结果集中某个成员的分数值是所有给定集下该成员分数值之和。 
+
+6.	ZLEXCOUNT key min max
+在有序集合中计算指定字典区间内成员数量
+7.	ZRANGE key start stop [WITHSCORES]
+通过索引区间返回有序集合指定区间内的成员
+指定区间内的成员。
+其中成员的位置按分数值递增(从小到大)来排序。
+具有相同分数值的成员按字典序(lexicographical order )来排列。
+如果你需要成员按
+值递减(从大到小)来排列，请使用 ZREVRANGE 命令。
+下标参数 start 和 stop 都以 0 为底，也就是说，以 0 表示有序集第一个成员，以 1 表示有序集第二个成员，以此类推。
+你也可以使用负数下标，以 -1 表示最后一个成员， -2 表示倒数第二个成员，以此类推。 
+
+8.	ZRANGEBYLEX key min max [LIMIT offset count]
+通过字典区间返回有序集合的成员
+
+9.	ZRANGEBYSCORE key min max [WITHSCORES] [LIMIT]
+Zrangebyscore 返回有序集合中指定分数区间的成员列表。有序集成员按分数值递增(从小到大)次序排列。
+具有相同分数值的成员按字典序来排列(该属性是有序集提供的，不需要额外的计算)。
+默认情况下，区间的取值使用闭区间 (小于等于或大于等于)，你也可以通过给参数前增加 ( 符号来使用可选的开区间 (小于或大于)。
+
+10.	ZRANK key member
+返回有序集合中指定成员的索引。其中有序集成员按分数值递增(从小到大)顺序排列。 如果成员是有序集 key 的成员，返回 member 的排名。 如果成员不是有序集 key 的成员，返回 nil 。 
+
+11.	ZREM key member [member ...]
+移除有序集合中的一个或多个成员。 不存在的成员将被忽略。当 key 存在但不是有序集类型时，返回一个错误。
+
+12.	ZREMRANGEBYLEX key min max
+移除有序集合中给定的字典区间的所有成员
+13.	ZREMRANGEBYRANK key start stop
+移除有序集合中给定的排名区间的所有成员
+14.	ZREMRANGEBYSCORE key min max
+移除有序集合中给定的分数区间的所有成员
+15.	ZREVRANGE key start stop [WITHSCORES]
+返回有序集中指定区间内的成员，通过索引，分数从高到低
+16.	ZREVRANGEBYSCORE key max min [WITHSCORES]
+返回有序集中指定分数区间内的成员，分数从高到低排序
+17.	ZREVRANK key member
+返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序
+18.	ZSCORE key member
+返回有序集中，成员的分数值
+19.	ZUNIONSTORE destination numkeys key [key ...]
+计算给定的一个或多个有序集的并集，并存储在新的 key 中
+20.	ZSCAN key cursor [MATCH pattern] [COUNT count]
+迭代有序集合中的元素（包括元素成员和元素分值）
+
+
 ### 3.7 hyperLogLog
 Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定的、并且是很小的。
 
