@@ -79,8 +79,35 @@ docker run常用参数：
 http://192.168.x.x:8080
 ```
 
+### 2. 阿里云加速
+使用docker镜像阿里云加速（注意改一下your accelerate address）：
+```
+sudo cp -n /lib/systemd/system/docker.service /etc/systemd/system/docker.service
+
+sudo sed -i "s|ExecStart=/usr/bin/docker daemon|ExecStart=/usr/bin/docker daemon --registry-mirror=<your accelerate address>|g" /etc/systemd/system/docker.service
+
+sudo sed -i "s|ExecStart=/usr/bin/dockerd|ExecStart=/usr/bin/dockerd --registry-mirror=<your accelerate address>|g" /etc/systemd/system/docker.service
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker          
+```
+如上的配置是把/lib/systemd/system/docker.service配置进行了配置，会导致配置冲突，在配置成功之后，需要把原先的/lib/systemd/system/docker.service进行备份才能成功重启docker
+
+
+关于文中的加速器地址\<your accelerate address>，请登录[容器镜像服务控制台](https://cr.console.aliyun.com/?spm=a2c4g.11186623.2.8.19e676277GKh0p)，在左侧导航栏选择镜像工具 > 镜像加速器，在镜像加速器页面的操作指引中查看，如下所示，也可以直接执行下面的配置，临时的使用加速，系统重启后就不行了。
+```
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{
+  "registry-mirrors": ["https://2zytu2c0.mirror.aliyuncs.com"]
+}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+即\<your accelerate address>为：https://2zytu2c0.mirror.aliyuncs.com
 
 ## Dockerfile
-
+dockerfile主要是构建自己的docker镜像的时候，用的的文件，实际上就是把构建一个docker镜像里面运行的环境使用了的命令全部罗列出来，然后逐行执行，最终生成一个系统镜像快照。
 
 ## Docker部署
