@@ -425,3 +425,98 @@ nigelpoulton/tu-demo v1 9b9...e29 4 months ago 211.6 MB
 
 如前所述，Docker 在 Linux 上支持很多存储引擎（Snapshotter）。每个存储引擎都有自己的镜像分层、镜像层共享以及写时复制（CoW）技术的具体实现。
 
+## 4. 容器
+### 4.1 容器与VM
+- 虚拟机
+在虚拟机模型中，首先要开启物理机并启动 Hypervisor 引导程序。一旦 Hypervisor 启动，就会占有机器上的全部物理资源，如 CPU、RAM、存储和 NIC。
+![](imgs/4-1Z41G01336346.gif)
+
+
+- 容器
+与虚拟机模型相同，OS 也占用了全部硬件资源。在 OS 层之上，需要安装容器引擎（如 Docker）。
+
+容器引擎可以获取系统资源，比如进程树、文件系统以及网络栈，接着将资源分割为安全的互相隔离的资源结构，称之为容器。
+
+每个容器看起来就像一个真实的操作系统，在其内部可以运行应用。实际上还是使用的物理机系统的内核。
+
+![](imgs/4-1Z41G01424234.gif)
+
+
+从更高层面上来讲，Hypervisor 是硬件虚拟化（Hardware Virtualization）——Hypervisor 将硬件物理资源划分为虚拟资源。
+容器是操作系统虚拟化（OS Virtualization）——容器将系统资源划分为虚拟资源。
+
+### 4.2 容器的生命周期
+#### 利用重启策略进行容器的自我修复
+通常建议在运行容器时配置好重启策略。这是容器的一种自我修复能力，可以在指定事件或者错误后重启来完成自我修复。
+
+重启策略应用于每个容器，可以作为参数被强制传入 docker-container run 命令中，或者在 Compose 文件中声明（在使用 Docker Compose 以及 Docker Stacks 的情况下）。
+
+容器支持的重启策略包括：
+- always
+always策略是一种简单的方式。除非容器被明确停止，比如通过 docker container stop 命令，否则该策略会一直尝试重启处于停止状态的容器。
+
+--restart always 策略有一个很有意思的特性，当 daemon 重启的时候，停止的容器也会被重启。
+
+例如，新创建一个容器并指定 --restart always 策略，然后通过 docker container stop 命令停止该容器。
+
+现在容器处于 Stopped (Exited) 状态。但是，如果重启 Docker daemon，当 daemon 启动完成时，该容器也会重新启动。
+
+- unless-stopped：
+
+always 和 unless-stopped 的最大区别，就是那些指定了 --restart unless-stopped 并处于 Stopped (Exited) 状态的容器，不会在 Docker daemon 重启的时候被重启。
+
+- on-failed
+on-failure 策略会在退出容器并且返回值不是 0 的时候，重启容器。
+
+就算容器处于 stopped 状态，在 Docker daemon 重启的时候，容器也会被重启。
+
+如果使用 Docker Compose 或者 Docker Stack，可以在 service 对象中配置重启策略，示例如下。
+```
+version: "3.5"
+services:
+myservice:
+<Snip>
+restart_policy:
+condition: always | unless-stopped | on-failure
+```
+
+可以使用 docker image inspect <容器镜像>
+查看容器详情
+```
+$ docker image inspect nigelpoulton/pluralsight-docker-ci
+[
+{
+"Id": "sha256:07e574331ce3768f30305519...49214bf3020ee69bba1",
+"RepoTags": [
+  "nigelpoulton/pluralsight-docker-ci:latest"
+
+  <Snip>
+
+],
+"Cmd": [
+  "/bin/sh",
+  "-c",
+  "#(nop) CMD [\"/bin/sh\" \"-c\" \"cd /src \u0026\u0026 node \
+  .app.js\"]"
+],
+<Snip>
+```
+
+#### 快速清理容器
+
+在 Docker 主机的 Shell 中运行下面的命令，可以删除全部容器。
+```
+$()
+```
+在本例中，因为只有一个运行中的容器，所以只有一个容器被删除（6efa1838cd51）。
+
+但是该命令的工作方式，就跟前面章节中用于删除某台 Docker 主机上全部容器的命令 rm $(docker image ls -q) 一样，docker container rm 命令会删除容器。
+
+如果将 $(docker container ls -aq) 作为参数传递给 docker container rm 命令，等价于将系统中每个容器的 ID 传给该命令。
+
+-f 标识表示强制执行，所以即使是处于运行状态的容器也会被删除。接下来，无论是运行中还是停止的容器，都会被删除并从系统中移除。
+
+而最常用的操作就是，清楚全部退出状态的容器：
+```
+docker rm $(docker ps -q -f status=exited)
+```
