@@ -1,4 +1,4 @@
-# Docker进阶
+# Docker进阶（一）存储引擎，镜像，容器
 ---
 参考摘录自：http://c.biancheng.net/view/3130.html
 
@@ -519,4 +519,6 @@ $()
 而最常用的操作就是，清楚全部退出状态的容器：
 ```
 docker rm $(docker ps -q -f status=exited)
+
 ```
+
