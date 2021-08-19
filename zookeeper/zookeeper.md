@@ -87,9 +87,27 @@ systemctl enable zookeeper  # 开机启动（如果有需要的话）
 systemctl start zookeeper  # 启动程序
 ```
 
-### 1.3 连接zookeeper
+### 1.4 sdwan中使用zookeeper
+由于在sdwan项目中使用了kafka，而kafka内置了zookeeper，因此我们在此直接使用kafka的zookeeper。
+
+kafka的代码目录中，在bin中有zookeeper相关的脚本：
+```
+[root@localhost bin]# ll -a |grep zookeeper
+-rwxr-xr-x. 1 root root  867 Nov 10  2018 zookeeper-security-migration.sh
+-rwxr-xr-x. 1 root root 1393 Nov 10  2018 zookeeper-server-start.sh
+-rwxr-xr-x. 1 root root 1001 Nov 10  2018 zookeeper-server-stop.sh
+-rwxr-xr-x. 1 root root  968 Nov 10  2018 zookeeper-shell.sh
+```
+
+但是只要打开脚本看一下就会发现，其实还关联了以下两个：
+```
+
+```
+
+
+### 1.5 连接zookeeper
 zk分为server和client，它们的作用是：
-- server：服务端运行在集群的每台机器当中，在急群众提供服务。 
+- server：服务端运行在集群的每台机器当中，在集群中提供服务。 
 - client：客户端是集群外的访问，服务端才是集群上的提供服务的。  
 
 
@@ -100,7 +118,6 @@ zk分为server和client，它们的作用是：
 其中zookeeper提供的master选举选的是客户端的master，根据他们登录后在GroupMember目录下创建的临时目录的id来选的，最小的是master。  
 
 这就区别于集群中服务端的各个servers的角色了，servers角色是leader和follow（或者还有observer）。 简而言之，客户端通过服务端来获取到zookeeper提供的服务。
-
 
 
 ## 2. 理论知识和名词描述
