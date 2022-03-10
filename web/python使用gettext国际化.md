@@ -124,12 +124,31 @@ root_dir = os.path.join(os.path.dirname(__file__), "translations")
 # 从 localedir/languages[x]/LC_MESSAGES/domain.mo 读取文件， localedir请传入一个绝对路径
 print(root_dir)
 zh_CN_translation = translation(domain="messages", localedir=root_dir, languages=["zh_CN"])
-fr_FR_translation = translation(domain="messages", localedir=root_dir, languages=["fr"])
-ja_JP_translation = translation(domain="messages", localedir=root_dir, languages=["ja"])
+fr_translation = translation(domain="messages", localedir=root_dir, languages=["fr"])
+ja_translation = translation(domain="messages", localedir=root_dir, languages=["ja"])
 
 ```
 
 ##### 第三步：从前端的请求的header获取accep-language字段：
+```python
+def get_locale():
+    # best_match后面的列表实际上是我们当前支持的语言标识符，此方法返回的列表的内容
+    return request.accept_languages.best_match(['zh_CN', 'en', 'fr', 'ja'])
 ```
 
+##### 第四步：根据语言标识符，获取不同的翻译对象，并且进行翻译：
+```
+current_lang = get_locale()
+
+if current_lang == 'zh_CN':
+    zh_CN_translation.install()
+elif current_lang == 'fr':
+    fr_translation.install()
+elif current_lang == 'ja':
+    ja_translation.install()
+
+c_str = _("Hello World")
+py_str = _("Hello World, %s") % "app"
+print(c_str)
+print(py_str)
 ```
