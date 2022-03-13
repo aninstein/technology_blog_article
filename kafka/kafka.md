@@ -1,5 +1,10 @@
 # Kafka学习手册
 ---
+
+本文摘自：
+链接：[https://www.orchome.com/5](https://www.orchome.com/5)
+来源：OrcHome
+
 ---
 
 ## 0. 预备动作
@@ -18,7 +23,7 @@ wget https://www.apache.org/dyn/closer.cgi?path=/kafka/2.7.0/kafka_2.13-2.7.0.tg
 kafka本身安装包中自带了zookeeper的启动软件，kafka的集群模式依赖于zookeeper，因此需要先启动zookeeper才能启动kafka
 
 ### 1.2 使用本地的zookeeper
-kafka可以使用本地的zookeeper
+kafka可以使用本地的zookeeper，可以在server.properties配置文件中配置zookeeper的地址当然一般都使用kafka自带的zookeeper脚本执行
 
 
 ## 2. 安装kafka
@@ -64,7 +69,7 @@ bin/kafka-console-producer.sh --broker-list localhost:9092 --topic lichangan-tes
 6. 创建消费者
 使用以下命令创建消费者
 ```
-in/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic lichangan --from-beginning
+bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic lichangan --from-beginning
 ```
 - bootstrap-server：指定kafka节点
 - topic：消费的topic
@@ -78,12 +83,12 @@ in/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic lichangan
 
 ## 3. kafka概念
 ### 3.1 基本概念
-- producer：消息的生产者，向kafka的一个topic发送消息
+- producer：消息的生产 者，向kafka的一个topic发送消息
 - consumer：消息的消费者，订阅kafka的topic
 - consumer group：对于一个topic，可以把消息广播给多个group，但是一个group只有一个consumer会消费到数据
-- broker（物理概念）：实际上就是kafka中的一个kafka节点
+- broker（物理概念）：实际上就是kafka中的一个kafka节点，就是kafka程序所在的服务器
 - topic（逻辑概念）：其实就是kafka消息的类别，对数据进行分区和隔离
-- partation（物理概念）：kafka下的数据存储单元。一个topic的数据会被分分散存储到多个partation，每一个partation都是有序的。kafka会把一个partation放在一个broker内
+- partation（物理概念）：kafka下的数据存储单元。一个topic的数据会被分分散存储到多个partation，每一个partation都是有序的。kafka会把一个partation放在一个broker内。Kafka中采用partation的设计有几个目的。一是可以处理更多的消息，不受单台服务器的限制。Topic拥有多个partation意味着它可以不受限的处理更多的数据。第二，partation可以作为并行处理的单元。
 	- 每一个topic被切分为多个partations
 	- 消费者数目小于或者等于partation的数目
 	- broker group中的每一个broke保存topic的一个或者多个partation，也就是说一个partation不会被多个broker保存。
@@ -100,10 +105,10 @@ in/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic lichangan
 - replicaManager：负责管理当前broker所有分区和副本的信息，处理kafkaController发起的一些请求，副本状态的切换、添加、读取消息等。
 
 ### 3.2 kafka Api
-- producer API
-- consumer API
-- streams API
-- connectors API
+- producer API：发布消息到1个或多个topic（主题）中。
+- consumer API：来订阅一个或多个topic，并处理产生的消息
+- streams API：充当一个流处理器，从1个或多个topic消费输入流，并生产一个输出流到1个或多个输出topic，有效地将输入流转换到输出流
+- connectors API：可构建或运行可重用的生产者或消费者，将topic连接到现有的应用程序或数据系统。例如，连接到关系数据库的连接器可以捕获表的每个变更
 
 ### 3.3 kafka消息格式
 ![kafka消息格式](images/1.jpg)
@@ -147,6 +152,56 @@ kafka消息字段：
 6.  事件源：将状态转移按照时间序列进行排列，以实现状态回溯
 7.  持久性日志（commit log），主要是使用日志回溯，让数据能够恢复
 
+### 4.1 消息模型
+一般来说，消息模型主要分为两种：
+- 队列: 队列的处理方式是 一组消费者从服务器读取消息，一条消息只有其中的一个消费者来处理。
+
+- 发布-订阅式: 消息被广播给所有的消费者，接收到消息的消费者都可以处理此消息。
+
+但是kafka解决上述两种消息模型，统一使用消费者组（consumer group）实现。
+- 队列：所有的消费则都在一个消费者组内
+- 发布订阅：理想情况，一个消费者只在一个消费者组中
 
 
+更通用的是，每个消费者组会有两个到多个消费者，一个组内多个消费者可以用来扩展性能和容错。
+如下：
+
+![2个kafka集群托管4个分区（P0-P3），2个消费者组，消费组A有2个消费者实例，消费组B有4个。](./images/consumer_group.png)
+
+
+## 4.2 保证消息的顺序不变
+Kafka保证消息的顺序不变，像传统的队列模型保持消息，并且保证它们的先后顺序不变。但是kafka是在kafka服务器上保证了消息的顺序不变，还是异步的发送给了各个消费者，消费者收到消息的先后顺序不能保证了。这也意味着并行消费将不能保证消息的先后顺序。如果只让一个消费者处理消息，又违背了并行处理的初衷。
+在这一点上Kafka做的更好，尽管并没有完全解决上述问题。 Kafka采用了一种分而治之的策略：分区（partation）。 因为**Topic的partation中消息只能由消费者组中的唯一一个消费者处理，并确保消费者是该partition的唯一消费者，并按顺序消费数据。**，所以消息肯定是按照先后顺序进行处理的。但是它也**仅仅是保证Topic的一个分区顺序处理**，不能保证跨分区的消息先后处理顺序。 **所以，如果你想要顺序的处理Topic的所有消息，那就只提供一个分区。** 每个topic有多个分区，则需要对多个消费者做负载均衡。
+**但请注意，相同的消费者组中不能有比分区更多的消费者，否则多出的消费者一直处于空等待，不会收到消息。**
+
+
+- 生产者发送到一个特定的Topic的分区上，消息将会按照它们发送的顺序依次加入，也就是说，如果一个消息M1和M2使用相同的producer发送，M1先发送，那么M1将比M2的offset低，并且优先的出现在日志中。
+- 消费者收到的消息也是此顺序。
+- 如果一个Topic配置了复制因子（replication factor）为N， 那么可以允许N-1服务器宕机而不丢失任何已经提交（committed）的消息。
+
+
+kafka中消费者组有两个概念：
+- 队列：消费者组（consumer group）允许同名的消费者组成员瓜分处理。
+- 发布订阅：允许你广播消息给多个消费者组（不同名）。
+
+kafka的每个topic都具有这两种模式。
+
+## 4.3 kafka的存储和流数据：
+### 4.3.1 作为存储系统
+Kafka是一个非常高性能的存储系统，写入到kafka的数据将写到磁盘并复制到集群中保证容错性。并允许生产者等待消息应答，直到消息完全写入。kafka的磁盘结构 - 无论你服务器上有50KB或50TB，执行是相同的。
+client来控制读取数据的位置。你还可以认为kafka是一种专用于高性能，低延迟，提交日志存储，复制，和传播特殊用途的**分布式文件系统**。
+
+### 4.3.2 作为流数据处理
+仅仅读，写和存储是不够的，kafka的目标是实时的流处理。
+
+在kafka中，流处理持续获取输入topic的数据，进行处理加工，然后写入输出topic。例如，一个零售APP，接收销售和出货的输入流，统计数量或调整价格后输出。
+
+可以直接使用producer和consumer API进行简单的处理。对于复杂的转换，Kafka提供了更强大的Streams API。可构建聚合计算或连接流到一起的复杂应用程序。
+
+助于解决此类应用面临的硬性问题：
+- 1. 处理无序的数据
+- 2. 代码更改的再处理
+- 3. 执行状态计算等。
+
+Streams API在Kafka中的核心：使用producer和consumer API作为输入，利用Kafka做状态存储，使用相同的组机制在stream处理器实例之间进行容错保障。
 
