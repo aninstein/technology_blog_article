@@ -262,7 +262,7 @@ shim 是实现无 daemon 的容器（用于将运行中的容器与 daemon 解�
 
 下面的示例只会返回悬虚（dangling）镜像。
 ```
-$ docker image ls --filter dangling=true
+$ docker images ls --filter dangling=true
 REPOSITORY TAG IMAGE ID CREATED SIZE
 <none> <none> 4fd34165afe0 7 days ago 14.5MB
 ```
