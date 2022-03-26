@@ -92,17 +92,21 @@ systemctl start zookeeper  # 启动程序
 
 kafka的代码目录中，在bin中有zookeeper相关的脚本：
 ```
-[root@localhost bin]# ll -a |grep zookeeper
--rwxr-xr-x. 1 root root  867 Nov 10  2018 zookeeper-security-migration.sh
--rwxr-xr-x. 1 root root 1393 Nov 10  2018 zookeeper-server-start.sh
--rwxr-xr-x. 1 root root 1001 Nov 10  2018 zookeeper-server-stop.sh
--rwxr-xr-x. 1 root root  968 Nov 10  2018 zookeeper-shell.sh
+[root@localhost bin]# ls |grep zookeeper
+zookeeper-security-migration.sh
+zookeeper-server-start.sh
+zookeeper-server-stop.sh
+zookeeper-shell.sh
 ```
 
-但是只要打开脚本看一下就会发现，其实还关联了以下两个：
-```
+其中：
+- zookeeper-security-migration.sh：
+- zookeeper-server-start.sh
+- zookeeper-server-stop.sh
+- zookeeper-shell.sh
 
-```
+
+但是只要打开脚本看一下就会发现，其实还关联了脚本：kafka-run-class.sh
 
 
 ### 1.5 连接zookeeper
