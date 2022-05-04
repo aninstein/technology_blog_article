@@ -257,7 +257,10 @@ CONTAINER ID   IMAGE              COMMAND                  CREATED          STAT
 - 官方文档的swarm集群工作原理：https://docs.docker.com/engine/swarm/how-swarm-mode-works/nodes/
 - 菜鸟：https://www.runoob.com/docker/docker-swarm.html
 
-![enter description here](./images/1649779724703.png)
+
+![docker集群](imgs/swarm-diagram.png)
+
+使用docker集群主要的工具：
 
 - 使用docker swarm创建集群
 - docker swarm集群至少有两个manager节点，然后swarm的配置只能在manager节点当中配置
