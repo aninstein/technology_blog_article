@@ -87,29 +87,7 @@ systemctl enable zookeeper  # 开机启动（如果有需要的话）
 systemctl start zookeeper  # 启动程序
 ```
 
-### 1.4 sdwan中使用zookeeper
-由于在sdwan项目中使用了kafka，而kafka内置了zookeeper，因此我们在此直接使用kafka的zookeeper。
-
-kafka的代码目录中，在bin中有zookeeper相关的脚本：
-```
-[root@localhost bin]# ls |grep zookeeper
-zookeeper-security-migration.sh
-zookeeper-server-start.sh
-zookeeper-server-stop.sh
-zookeeper-shell.sh
-```
-
-其中：
-- zookeeper-security-migration.sh：
-- zookeeper-server-start.sh
-- zookeeper-server-stop.sh
-- zookeeper-shell.sh
-
-
-但是只要打开脚本看一下就会发现，其实还关联了脚本：kafka-run-class.sh
-
-
-### 1.5 连接zookeeper
+### 1.4 连接zookeeper
 zk分为server和client，它们的作用是：
 - server：服务端运行在集群的每台机器当中，在集群中提供服务。 
 - client：客户端是集群外的访问，服务端才是集群上的提供服务的。  
@@ -124,5 +102,63 @@ zk分为server和client，它们的作用是：
 这就区别于集群中服务端的各个servers的角色了，servers角色是leader和follow（或者还有observer）。 简而言之，客户端通过服务端来获取到zookeeper提供的服务。
 
 
-## 2. 理论知识和名词描述
-### 2.1 
+## 2. 搭建zookeeper集群
+
+上述只是一个简单的zookeeper安装过程，我们玩zookeeper还是要搭建zookeeper集群玩。可以使用docker搭建伪集群
+### 2.1 docker搭建zk集群
+```
+# 拉取镜像
+docker pull zookeeper
+
+# 启动三个zk容器
+docker run -d --name=zk1 -v /config/zk1:/conf -p 2181:2181 zookeeper:3.7
+docker run -d --name=zk2 -v /config/zk2:/conf -p 2182:2181 zookeeper:3.7
+docker run -d --name=zk3 -v /config/zk3:/conf -p 2183:2181 zookeeper:3.7
+```
+
+我们使用docker inspect <容器名称>查看容器IP：
+```
+[root@localhost config]# docker inspect zk1 |grep IPAddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "172.17.0.2",
+                    "IPAddress": "172.17.0.2",
+```
+
+从上述启动容器中可以看到zk的配置文件被映射到了/config下，更改三个配置文件为如下：
+```
+dataDir=/data
+dataLogDir=/datalog
+tickTime=2000
+initLimit=5
+syncLimit=2
+autopurge.snapRetainCount=3
+autopurge.purgeInterval=0
+maxClientCnxns=60
+standaloneEnabled=true
+admin.enableServer=true
+server.1=172.17.0.2:2888:3888;2181
+server.2=172.17.0.3:2888:3888;2181
+server.3=172.17.0.4:2888:3888;2181
+```
+
+进入容器内部更改每一个容器的myid：
+```
+docker exec -it zk1 bash
+zk1: echo 1 > /data/myid
+
+docker exec -it zk2 bash
+zk2: echo 2 > /data/myid
+
+docker exec -it zk3 bash
+zk3: echo 3 > /data/myid
+```
+
+重启容器
+```
+docker restart zk1 zk2 zk3
+```
+
+使用如下命令查看节点状态
+```
+echo stat | nc 172.17.0.2 2181
+```
