@@ -1,5 +1,11 @@
-# Docker简单入门教程
+# Docker入门教程，简单使用
 ---
+
+参考：
+[菜鸟教程：https://www.runoob.com/docker/docker-tutorial.html](https://www.runoob.com/docker/docker-tutorial.html)
+
+[老鸟教程：http://c.biancheng.net/view/3118.html](http://c.biancheng.net/view/3118.html)
+
 ---
 ## Docker安装
 ### 1. centos8.0安装Docker
@@ -107,9 +113,162 @@ sudo systemctl restart docker
 ```
 即\<your accelerate address>为：https://2zytu2c0.mirror.aliyuncs.com
 
-## Dockerfile
+## 3. Dockerfile
 dockerfile主要是构建自己的docker镜像的时候，用的的文件，实际上就是把构建一个docker镜像里面运行的环境使用了的命令全部罗列出来，然后逐行执行，最终生成一个系统镜像快照。
 
 具体的dockerfile可用命令可以参考菜鸟教程：[https://www.runoob.com/docker/docker-dockerfile.html](https://www.runoob.com/docker/docker-dockerfile.html)
 
+
+## 4. Docker部署
+ 
+## 4.1 docker部署pg
+postgres-11:v1.0 制作过程：
+
+
+- 1）拉取pg-11的镜像
+```
+docker pull  postgres:11
+```
+
+- 2）启动容器，名称为pgserver（不指定目录时，默认在/var/lib/postgresql，对数据库修改后在新镜像中不保存）
+```
+docker run -d --name pgserver -e PGDATA=/pg_data --publish 5433:5432 postgres:11
+```
+
+- 3）进入容器的bash
+
+```
+docker exec -it pgserver bash
+```
+
+- 4）进入容器之后，更改数据库内容
+
+```
+# a) 进入database
+cd /root/database
+
+# b）设置postgres的密码
+psql -U postgres postgres -c "alter user postgres with password 'XXXXXX';"
+
+# c）配置文件拷贝到pg的工作目录
+cp pg_hba.conf /pg_data
+cp postgresql.conf /pg_data
+chown postgres:postgres /pg_data/*.conf
+
+# d）pg重新加载配置
+su -l postgres -c "/usr/lib/postgresql/11/bin/pg_ctl -D /data -s reload"
+
+# e）执行数据库初始化脚本
+bash manager.sh -i
+
+# f）退出容器
+exit
+```
+
+- 5）创建新镜像
+
+```
+docker commit -m "create database" -a "aninstein"  postgres-11:v1
+```
+
+- 6）保存镜像
+```
+docker save -o pgserver-11.tar postgres-11:v1
+```
+
+
+
+数据库文件是挂载到：/media/data
+数据库配置文件使用的是：/pg_data/
+当我们的docker运行了pg之后，能够使用docker ps看到正在运行的pg_server实例：
+```linux
+CONTAINER ID        IMAGE                   COMMAND                  CREATED             STATUS              PORTS                    NAMES
+a7e25fc1028c        docker.io/postgres:11   "docker-entrypoint..."   4 months ago        Up 13 days          0.0.0.0:5432->5432/tcp   pgserver
+```
+
+对于此数据库内容的操作和安装在本地的数据库操作一致。
+
+
+## 4.2 python2环境中，使用docker部署一个python3的服务
+在某个python2环境中，使用了图像识别服务，但是这个AI需要用到python3的相关内容，而且安装的包有可能有冲突，部署方案有两个：
+- 在部署环境添加一个python3的环境，只是在不同的路径
+- 使用docker部署AI服务，使用RPC方法来进行调度
+
+相对于部署的简单程度，采用了docker的部署方案
+
+在docker镜像当中实现了一个gunicron运行的flask程序，而这个程序调用了ocr库来识别导入图像文字信息。而图片的存储位置是挂载到我们宿主机的目录上的。
+
+在ocr_service中有一个ocr_build目录，里面包含了对应的dockerfile和代码程序包。
+
+使用命令把ocr_service源码文件夹打成tar包，tar包放在ocr_build/目录下
+```
+tar -cvf ocr_service.tar.gz ocr_service
+mv ocr_service.tar.gz ocr_build/
+```
+
+在进行版本编译的时候，tar包则会被放在ocr_build下，我们把此目录作为dockerfile的上下文目录，进行docker编译：
+```
+docker build --network=host -t ocr_module:v1 ocr_build
+```
+
+镜像构建的dockerfile内容为：
+```dockerfile
+# dockerfile build in ocr_build/
+FROM centos:7
+ADD ocr_service.tar.gz /ocr_module/
+
+RUN cd /ocr_module/ocr_service \
+    && mkdir -p ~/.pip \
+    && mv pip.conf ~/.pip/ \
+    && yum install -y python36 \
+    && pip3 install --upgrade pip \
+    && yum install epel-release -y \
+    && yum install mesa-libGL.x86_64 -y \
+    && yum install openblas-devel -y \
+    && pip3 --no-cache-dir install pillow \
+    && pip3 --no-cache-dir install opencv-python \
+    && pip3 --no-cache-dir install flask gevent gunicorn \
+    && cd package \
+    && pip3 install onnxruntime-1.5.2-cp36-cp36m-linux_x86_64.whl \
+    && yum clean all
+
+WORKDIR /ocr_module/ocr_service
+
+ENV PYTHONIOENCODING=utf-8 FLASK_APP=app.py FLASK_RUN_HOST=0.0.0.0 FLASK_RUN_PORT=5051
+
+CMD ["gunicorn", "app:app", "-c", "gun.conf"]
+```
+
+文件内容的流程为：
+1. 解压ocr_service.tar.gz到容器的/ocr_module
+2. ocr_service.tar.gz内容主要包括：
+
+- 用flask实现的简单的RPC代码
+- gunicron的配置文件
+- AI模块提供的ocr软件包和训练模型文件
+
+3. 在容器内进行安装所需的依赖包，由于执行dockerfile构建容器，一般情况是联网的状态，所以一些包并不需要内置在压缩文件里
+4. 值得注意的是，我们为了保证生成的镜像尽可能的小，在执行yum和pip安装之后需要把缓存文件删除
+5. 需要配置PYTHONIOENCODING=utf-8来保证snocr出现的数据内容中文能够显示
+
+
+如果docker构建出错，会出现一些多余的eixted状态的container，可以使用命令批量删除：
+```commandline
+docker rm $(docker ps -q -f status=exited)
+```
+
+
+进而得到了一个可以运行ocr_module的docker镜像。
+我们使用这个镜像构建容器：
+- 指定主机1601端口映射容器的5051端口
+- 挂载本地图片目录/media到容器的/ocr_module/media
+
+```commandline
+docker run  -itd  -v /media:/ocr_module/media -w /ocr_module/ocr_service -p 1609:5051 --name ocr_service ocr_module:v2  gunicorn app:app -c gun.conf 
+```
+
+导出生成的docker
+```commandline
+docker save -o ocr_module.tar ocr_module:v1
+```
 

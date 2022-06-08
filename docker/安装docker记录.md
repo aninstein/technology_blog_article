@@ -16,7 +16,12 @@ sudo yum install -y yum-utils \
   device-mapper-persistent-data \
   lvm2
 ```
+
 安装docker
+
+可以使用阿里云的进行安装：
+
+https://mirrors.aliyun.com/docker-ce/linux/centos/7/x86_64/edge/Packages/
 ```shell
 yum update
 

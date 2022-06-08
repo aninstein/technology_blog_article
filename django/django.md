@@ -201,4 +201,41 @@ python3 manage.py runserver 0.0.0.0:8000
 ```
 
 ```
+#### 什么是wsgi
 
+###### WSGI:
+web服务器网关接口,是一套协议。用于接收用户请求并将请求进行初次封装，然后将请求交给web框架
+实现wsgi协议的模块：
+
+- wsgiref,本质上就是编写一个socket服务端，用于接收用户请求(django)
+- werkzeug,本质上就是编写一个socket服务端，用于接收用户请求(flask)
+
+###### uwsgi:
+与WSGI一样是一种通信协议，它是uWSGI服务器的独占协议,用于定义传输信息的类型
+- uWSGI:
+是一个web服务器,实现了WSGI协议,uWSGI协议,http协议,
+
+
+#### django请求的生命周期
+- wsgi,请求封装后交给web框架 （Flask、Django）
+- 中间件，对请求进行校验或在请求对象中添加其他相关数据，例如：csrf、request.session -
+- 路由匹配 根据浏览器发送的不同url去匹配不同的视图函数
+- 视图函数，在视图函数中进行业务逻辑的处理，可能涉及到：orm、templates => 渲染 
+- 中间件，对响应的数据进行处理。
+- wsgi,将响应的内容发送给浏览器。
+
+
+#### 说一下Django，MIDDLEWARES中间件的作用和应用场景？
+中间件是介于request与response处理之间的一道处理过程,用于在全局范围内改变Django的输入和输出。
+简单的来说中间件是帮助我们在视图函数执行之前和执行之后都可以做一些额外的操作
+例如：
+- Django项目中默认启用了csrf保护,每次请求时通过CSRF中间件检查请求中是否有正确token值
+- 当用户在页面上发送请求时，通过自定义的认证中间件，判断用户是否已经登陆，未登陆就去登陆。
+- 当有用户请求过来时，判断用户是否在白名单或者在黑名单里
+
+#### 列举django中间件的5个方法
+process_request : 请求进来时,权限认证
+process_view : 路由匹配之后,能够得到视图函数
+process_exception : 异常时执行
+process_template_responseprocess : 模板渲染时执行
+process_response : 请求有响应时执行
