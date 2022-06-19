@@ -51,11 +51,11 @@ class ZKTools(object):
         return self.zk.get_children("/")
 
     @check_zk
-    def get_node(self, node_path):
-        return self.zk.get_children(node_path)
+    def get_node(self, node_path, watch: callable = None):
+        return self.zk.get_children(node_path, watch=watch)
 
     @check_zk
-    def get_node_watch(self, node_path, watch: callable):
+    def get_node_watch(self, node_path, watch: callable = None):
         return self.zk.get(node_path, watch=watch)
 
     @check_zk
@@ -100,6 +100,10 @@ class ZKTools(object):
             if i == "zookeeper":
                 continue
             self.zk.delete('/%s' % i, recursive=True)
+
+    @check_zk
+    def exist(self, path, watch: callable):
+        return self.zk.exists(path, watch)
 
 
 def test_watch(event):
