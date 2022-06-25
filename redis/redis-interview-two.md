@@ -129,3 +129,11 @@ epoll之所以高性能是得益于它的三个函数
 　　select：不修改宏定义默认是1024,l则需要100w/1024=977个进程才可以支持 100万连接，会使得CPU性能特别的差。
 　　poll：    没有最大文件描述符限制,100万个链接则需要100w个fd，遍历都响应不过来了，还有空间的拷贝消耗大量的资源。
 　　epoll:    请求进来时就创建fd并绑定一个callback，主需要遍历1w个活跃连接的callback即可，即高效又不用内存拷贝。
+  
+  
+  ## 4. redis数据备份
+  
+  redis数据备份主要分为两种，一种是RDB，一种是AOF，[参考博客](https://blog.csdn.net/ZhangXS9722/article/details/118250037)
+  
+  - 方式一：半持久化RDB模式（Redis DataBase）【redis备份默认方式】
+  - 方式二：全持久化AOF模式（Append Only File）
